@@ -1,1 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        .heart {
+            color: #ff4b6e;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .question {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        .options button {
+            background: #ff4b6e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 80%;
+            white-space: normal;
+            line-height: 1.4;
+        }
+        .options button:hover {
+            transform: scale(1.05);
+        }
+        .result {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            color: #666;
+            min-height: 50px;
+        }
+        .progress {
+            margin-top: 1rem;
+            color: #888;
+        }
+        .final-message {
+            display: none;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #ff4b6e;
+        }
+        .continue-btn, .play-again-btn {
+            background: #ff4b6e;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            margin-top: 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+        .continue-btn:hover, .play-again-btn:hover {
+            transform: scale(1.05);
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="heart">❤️</div>
+        <div class="question"></div>
+        <div class="options"></div>
+        <div class="result"></div>
+        <div class="progress"></div>
+        <div class="final-message"></div>
+    </div>
 
+    <script>
+        const questions = [
+            {
+                question: "If I were an animal, what would I be?",
+                options: [
+                    "🐕 A loyal dog",
+                    "🐉 A majestic dragon",
+                    "🐢 A slow but wise turtle",
+                    "🐒 A cheeky monkey"
+                ],
+                responses: [
+                    "So you're saying I'll wait for you outside the train station like Hachiko? Bruh.",
+                    "Ah yes, flying, breathing fire, and hoarding treasure… just like my bank account: always empty.",
+                    "I feel like you're calling me lazy but trying to make it sound deep.",
+                    "Are you saying I belong in the zoo or what???"
+                ]
+            },
+            {
+                question: "If I was an NPC in a video game, what would my dialogue be?",
+                options: [
+                    "🛑 'You're not strong enough to pass this area.'",
+                    "💬 'I have nothing more to say to you.'",
+                    "🎁 'Bring me 100 rare items for a 0.5% reward.'",
+                    "😶 'Press [F] to pay respects.'"
+                ],
+                responses: [
+                    "So I'm basically a human error message. Great.",
+                    "Wow, I'm that one NPC that just stares at you awkwardly after 1 line of dialogue.",
+                    "Ah yes, classic scam quest-giver behavior.",
+                    "My whole existence is just a meme. I accept this."
+                ]
+            },
+            {
+                question: "If I had to survive a zombie apocalypse, what would be my strategy?",
+                options: [
+                    "🔫 Go full action movie mode, guns blazing!",
+                    "🚗 Steal a car and drive to the mountains!",
+                    "🧠 Use 900 IQ strategies to outsmart zombies.",
+                    "🏃 Just run and hope for the best."
+                ],
+                responses: [
+                    "Until I run out of bullets and become zombie sushi.",
+                    "Bold of you to assume I can afford gas in this economy.",
+                    "Nice idea, but I forgot where I put my phone 5 minutes ago.",
+                    "So basically cardio training with extra motivation."
+                ]
+            },
+            {
+                question: "What's my biggest red flag?",
+                options: [
+                    "📱 Never replies fast but always online.",
+                    "🍕 Eats the last piece of food without asking.",
+                    "🛏️ Can sleep 14 hours straight without a problem.",
+                    "😂 Sends memes instead of serious replies."
+                ],
+                responses: [
+                    "I was gonna reply… but then I didn't.",
+                    "Survival of the fittest. No regrets.",
+                    "It's called energy conservation. I'm a genius.",
+                    "Communication is key, and my key is memes."
+                ]
+            },
+            {
+                question: "If we were stuck on a deserted island, what's my role?",
+                options: [
+                    "🔥 The fire starter – keeps us warm but might burn everything down.",
+                    "🐟 The fisherman – tries to get food but fails 90% of the time.",
+                    "🌴 The shelter builder – makes a house out of leaves and hopes it doesn't collapse.",
+                    "🛶 The escape planner – builds a raft that sinks immediately."
+                ],
+                responses: [
+                    "If you see me with two sticks, just know I'm about to risk our survival.",
+                    "Congrats, we're having imaginary sushi again.",
+                    "It's not a 5-star hotel, but it's 5 stars in my heart.",
+                    "At least I tried. Now we just float and hope for the best."
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let selectedAnswer = null;
+
+        function displayQuestion() {
+            const questionDiv = document.querySelector('.question');
+            const optionsDiv = document.querySelector('.options');
+            const progressDiv = document.querySelector('.progress');
+            const resultDiv = document.querySelector('.result');
+            
+            resultDiv.textContent = '';
+            
+            if (currentQuestion < questions.length) {
+                const question = questions[currentQuestion];
+                questionDiv.textContent = question.question;
+                
+                optionsDiv.innerHTML = '';
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.innerHTML = option;
+                    button.onclick = () => selectAnswer(index);
+                    optionsDiv.appendChild(button);
+                });
+                
+                progressDiv.textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+            } else {
+                showFinalMessage();
+            }
+        }
+
+        function selectAnswer(index) {
+            const resultDiv = document.querySelector('.result');
+            const optionsDiv = document.querySelector('.options');
+            const question = questions[currentQuestion];
+            
+            // Remove any existing continue button
+            const existingContinueBtn = document.querySelector('.continue-btn');
+            if (existingContinueBtn) {
+                existingContinueBtn.remove();
+            }
+            
+            // Disable all option buttons
+            const buttons = optionsDiv.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.style.opacity = '0.6';
+                button.disabled = true;
+            });
+            
+            // Highlight selected answer
+            buttons[index].style.opacity = '1';
+            buttons[index].style.background = '#ff6b8e';
+            
+            resultDiv.textContent = question.responses[index];
+            
+            // Add continue button
+            const continueBtn = document.createElement('button');
+            continueBtn.textContent = 'Continue';
+            continueBtn.className = 'continue-btn';
+            continueBtn.onclick = () => {
+                currentQuestion++;
+                displayQuestion();
+            };
+            resultDiv.appendChild(document.createElement('br'));
+            resultDiv.appendChild(continueBtn);
+        }
+
+        function showFinalMessage() {
+            const container = document.querySelector('.container');
+            const questionDiv = document.querySelector('.question');
+            const optionsDiv = document.querySelector('.options');
+            const progressDiv = document.querySelector('.progress');
+            const resultDiv = document.querySelector('.result');
+            const finalMessageDiv = document.querySelector('.final-message');
+            
+            questionDiv.style.display = 'none';
+            optionsDiv.style.display = 'none';
+            progressDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+            
+            finalMessageDiv.style.display = 'block';
+            finalMessageDiv.innerHTML = `
+                <h2>Happy Valentine's Day! ❤️</h2>
+                <p>Thanks for playing! You've made this game, and my day, special.</p>
+                <p>Now, how about a real-life date? 😊</p>
+                <p>Just let me check my teleportation spell real quick… oh wait, still on cooldown for 1,247 years 😭.</p>
+                <p style="font-size: 2rem">🌹💝</p>
+            `;
+            
+            // Add play again button
+            const playAgainBtn = document.createElement('button');
+            playAgainBtn.textContent = 'Play Again';
+            playAgainBtn.className = 'play-again-btn';
+            playAgainBtn.onclick = () => {
+                currentQuestion = 0;
+                finalMessageDiv.style.display = 'none';
+                questionDiv.style.display = 'block';
+                optionsDiv.style.display = 'block';
+                progressDiv.style.display = 'block';
+                resultDiv.style.display = 'block';
+                displayQuestion();
+            };
+            finalMessageDiv.appendChild(playAgainBtn);
+        }
+
+        // Start the game
+        displayQuestion();
+    </script>
+</body>
+</html>
